@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mis Finanzas</title>
+<meta name="theme-color" content="#E9EEEA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111915" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mis Finanzas">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<link rel="icon" href="icono.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script src="config.js"></script>
+<style>
+:root{--fondo:#E9EEEA;--tira:#FAFBF8;--tinta:#1D2B25;--suave:#5E6E66;--verde:#2D6A4F;--linea:#CDD6D0}
+@media (prefers-color-scheme: dark){:root{--fondo:#111915;--tira:#18221D;--tinta:#E6EEE9;--suave:#9AABA2;--verde:#7CC39B;--linea:#2B3832}}
+html,body{margin:0;height:100%;background:var(--fondo);overflow:hidden;font:15px/1.45 system-ui,-apple-system,sans-serif;color:var(--tinta)}
+#app{position:fixed;left:0;top:env(safe-area-inset-top,0px);width:100%;height:calc(100% - env(safe-area-inset-top,0px));border:0;background:var(--fondo);display:block}
+#splash{position:fixed;inset:0;z-index:10;background:var(--fondo);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .35s}
+#splash.fuera{opacity:0;pointer-events:none}
+.sp-ic{width:96px;height:96px;filter:drop-shadow(0 10px 22px rgba(22,34,29,.22))}
+.sp-ic .mf-linea{stroke-dasharray:100;animation:trazo 1.5s cubic-bezier(.6,0,.3,1) infinite}
+.sp-ic .mf-punto{transform-box:fill-box;transform-origin:center;animation:punto 1.5s ease-in-out infinite}
+@keyframes trazo{0%{stroke-dashoffset:100}55%,75%{stroke-dashoffset:0}100%{stroke-dashoffset:-100}}
+@keyframes punto{0%,40%{transform:scale(0)}58%{transform:scale(1.15)}66%,80%{transform:scale(1)}100%{transform:scale(0)}}
+@media (prefers-reduced-motion: reduce){.sp-ic .mf-linea,.sp-ic .mf-punto{animation:none}}
+.sp-w{font-size:22px;font-weight:700;letter-spacing:-.01em}
+.sp-msg{color:var(--suave);font-size:14px;min-height:20px;text-align:center;padding:0 24px}
+.hoja{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:20;width:min(440px,calc(100% - 24px));background:var(--tira);color:var(--tinta);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.3);padding:18px;display:none}
+.hoja.ver{display:block;animation:sube .25s ease}
+.hoja h3{margin:0 0 6px;font-size:17px}.hoja p{margin:0 0 14px;font-size:14px;color:var(--suave)}
+.hoja .acc{display:flex;gap:10px;justify-content:flex-end}
+.hoja button{font:inherit;font-weight:600;padding:11px 16px;border-radius:8px;border:1px solid var(--linea);background:transparent;color:var(--tinta);cursor:pointer}
+.hoja button.si{background:var(--verde);border-color:var(--verde);color:#fff}
+@media (prefers-color-scheme: dark){.hoja button.si{color:#111915}}
+@keyframes sube{from{transform:translate(-50%,20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+</style>
+</head>
+<body>
+<div id="splash">
+  <svg class="sp-ic" viewBox="0 0 512 512" aria-hidden="true"> <defs><radialGradient id="mf-f" cx="35%" cy="25%" r="85%"><stop offset="0" stop-color="#2A3E35"/><stop offset="1" stop-color="#16221D"/></radialGradient></defs> <rect width="512" height="512" rx="114" fill="url(#mf-f)"/> <g transform="translate(-14 -8)"> <g transform="rotate(8 300 270)"><path d="M170 134 l19.3 -14 l19.3 14 l19.3 -14 l19.3 14 l19.3 -14 l19.3 14 l19.3 -14 l19.3 14 l19.3 -14 l19.3 14 l19.3 -14 l19.3 14 V388 q0 22 -22 22 H192 q-22 0 -22 -22 Z" fill="#7CC39B"/></g> <g transform="rotate(-5 240 270)"> <path d="M128 132 l19.7 -14 l19.7 14 l19.7 -14 l19.7 14 l19.7 -14 l19.7 14 l19.7 -14 l19.7 14 l19.7 -14 l19.7 14 l19.7 -14 l19.7 14 V396 q0 22 -22 22 H150 q-22 0 -22 -22 Z" fill="#FAFBF8"/> <rect x="164" y="166" width="104" height="15" rx="7.5" fill="#CDD6D0"/> <rect x="164" y="196" width="66" height="15" rx="7.5" fill="#CDD6D0"/> <polyline class="mf-linea" pathLength="100" points="166,352 202,276 238,330 274,262 318,228" fill="none" stroke="#2D6A4F" stroke-width="27" stroke-linecap="round" stroke-linejoin="round"/> <circle class="mf-punto" cx="318" cy="228" r="21" fill="#E3B341"/> </g> </g> </svg> 
+  <div class="sp-w">Mis Finanzas</div>
+  <div class="sp-msg" id="spMsg"></div>
+</div>
+
+<iframe id="app" title="Mis Finanzas" allow="clipboard-write"></iframe>
+
+<div class="hoja" id="hPush" role="dialog" aria-labelledby="hPushT">
+  <h3 id="hPushT">Activar avisos</h3>
+  <p>Te llegará un aviso a este teléfono cada vez que entre un gasto o un ingreso. Puedes desactivarlos cuando quieras en Ajustes.</p>
+  <div class="acc"><button type="button" onclick="cerrarHoja('hPush');aIframe({mf:'push-error',error:'Activación cancelada.'})">Ahora no</button><button type="button" class="si" onclick="activarPush()">Permitir</button></div>
+</div>
+<div class="hoja" id="hInst" role="dialog" aria-labelledby="hInstT">
+  <h3 id="hInstT">Instalar Mis Finanzas</h3>
+  <p id="hInstTxt">Tendrás el icono en tu pantalla de inicio, pantalla completa y avisos.</p>
+  <div class="acc"><button type="button" onclick="cerrarHoja('hInst');try{localStorage.setItem('mf_inst_no','1')}catch(e){}">Ahora no</button><button type="button" class="si" id="btnInst" onclick="instalar()">Instalar</button></div>
+</div>
+
+<script>
+var EXEC = self.MF_EXEC, FUENTE = null, VAPID = '', REG = null, INST = null;
+var prm = new URLSearchParams(location.search), pantalla = prm.get('p') || '';
+function $(i){return document.getElementById(i)}
+function cargar(p){ $('app').src = EXEC + (p ? '?p=' + encodeURIComponent(p) : ''); }
+function listo(){ var s=$('splash'); if(s.classList.contains('fuera'))return; s.classList.add('fuera'); setTimeout(function(){s.style.display='none'},400); }
+// Solo se responde al marco de Google que saludó (FUENTE se fija con un mensaje verificado de origen Google)
+function aIframe(m){ try{ if (FUENTE) FUENTE.postMessage(m,'*'); }catch(e){} }
+function cerrarHoja(id){ $(id).classList.remove('ver'); }
+var esApp = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+var esIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function equipo(){ var u=navigator.userAgent, so=/android/i.test(u)?'Android':esIOS?'iPhone':/windows/i.test(u)?'Windows':/mac os/i.test(u)?'Mac':'Equipo';
+  var nav=/edg\//i.test(u)?'Edge':/crios|chrome/i.test(u)?'Chrome':/fxios|firefox/i.test(u)?'Firefox':/safari/i.test(u)?'Safari':'Navegador';
+  return so+' · '+nav+(esApp?' (app)':''); }
+function pushSoportado(){ return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; }
+
+function idb(){ return new Promise(function(ok,ko){ var r=indexedDB.open('misfinanzas',1); r.onupgradeneeded=function(){r.result.createObjectStore('kv')}; r.onsuccess=function(){ok(r.result)}; r.onerror=ko; }); }
+function guardarSid(sid){ return idb().then(function(db){ return new Promise(function(ok){ var t=db.transaction('kv','readwrite'); if(sid)t.objectStore('kv').put(sid,'sid'); else t.objectStore('kv').delete('sid'); t.oncomplete=ok; t.onerror=ok; }); }).catch(function(){}); }
+function leerSid(){ return idb().then(function(db){ return new Promise(function(ok){ var q=db.transaction('kv').objectStore('kv').get('sid'); q.onsuccess=function(){ok(q.result||'')}; q.onerror=function(){ok('')}; }); }).catch(function(){return ''}); }
+
+// La app de Google corre en dominios de Google; solo se aceptan mensajes de ahí
+function deGoogle(o){ return /^https:\/\/([a-z0-9-]+\.)*(googleusercontent\.com|google\.com)$/.test(o); }
+window.addEventListener('message', function(e){
+  var d = e.data || {}; if (!d.mf || !deGoogle(e.origin)) return;
+  if (d.mf === 'hola') { FUENTE = e.source; leerSid().then(function(sid){ aIframe({ mf:'shell', push: pushSoportado(), permiso: pushSoportado() ? Notification.permission : 'no', sid: sid, app: esApp, version: self.MF_VERSION }); }); }
+  if (d.mf === 'listo') { FUENTE = e.source || FUENTE; listo(); }
+  if (d.mf === 'push-activar') { FUENTE = e.source || FUENTE; VAPID = d.vapid;
+    if (!pushSoportado()) return aIframe({mf:'push-error',error:'Este navegador no admite avisos.'});
+    if (esIOS && !esApp) return aIframe({mf:'push-error',error:'En iPhone primero instala la app: Compartir → Agregar a inicio, y ábrela desde el icono.'});
+    $('hPush').classList.add('ver'); }
+  if (d.mf === 'push-sid') { guardarSid(d.sid); }
+  if (d.mf === 'push-desactivar') { guardarSid(''); if (REG) REG.pushManager.getSubscription().then(function(s){ if(s) s.unsubscribe(); }); }
+});
+function b64u(s){ s=s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4)s+='='; var b=atob(s),u=new Uint8Array(b.length); for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i); return u; }
+function activarPush(){
+  cerrarHoja('hPush');
+  Notification.requestPermission().then(function(p){
+    if (p !== 'granted') throw new Error('No diste permiso para los avisos. Puedes habilitarlo en Ajustes del teléfono → Notificaciones → Mis Finanzas.');
+    return (REG ? Promise.resolve(REG) : navigator.serviceWorker.ready).then(function(reg){
+      return reg.pushManager.getSubscription().then(function(s){ return s || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(VAPID) }); });
+    });
+  }).then(function(sub){ aIframe({ mf:'push-sub', sub: sub.toJSON(), equipo: equipo() }); })
+    .catch(function(err){ aIframe({ mf:'push-error', error: String(err.message || err) }); });
+}
+
+// --- Instalación ---
+window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); INST = e; var no=false; try{no=localStorage.getItem('mf_inst_no')}catch(x){} if(!esApp && !no) setTimeout(function(){ $('hInst').classList.add('ver'); }, 4000); });
+function instalar(){ cerrarHoja('hInst'); if (INST) { INST.prompt(); INST = null; } }
+if (esIOS && !esApp) { var no=false; try{no=localStorage.getItem('mf_inst_no')}catch(x){} if(!no){ $('hInstTxt').innerHTML='En iPhone: toca <b>Compartir</b> y luego <b>Agregar a inicio</b>. Así tendrás el icono de Mis Finanzas y podrás recibir avisos.'; $('btnInst').style.display='none'; setTimeout(function(){ $('hInst').classList.add('ver'); }, 5000); } }
+
+// --- Service worker y arranque ---
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(function(r){ REG = r; }).catch(function(){});
+  navigator.serviceWorker.addEventListener('message', function(e){ if (e.data && e.data.mf === 'ir') cargar(e.data.p || ''); });
+}
+if (!navigator.onLine) $('spMsg').textContent = 'Sin conexión a internet. Se cargará al reconectar.';
+window.addEventListener('online', function(){ $('spMsg').textContent=''; if(!$('splash').classList.contains('fuera')) cargar(pantalla); });
+setTimeout(function(){ if(!$('splash').classList.contains('fuera')) $('spMsg').textContent='Conectando con tu planilla…'; }, 6000);
+setTimeout(listo, 30000);
+cargar(pantalla);
+if (pantalla) history.replaceState(null, '', location.pathname);
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs><radialGradient id="mf-f" cx="35%" cy="25%" r="85%"><stop offset="0" stop-color="#2A3E35"/><stop offset="1" stop-color="#16221D"/></radialGradient></defs>
+  <rect width="512" height="512" rx="114" fill="url(#mf-f)"/>
+  <g transform="translate(-14 -8)">
+    <g transform="rotate(8 300 270)"><path d="M170 134 l19.3 -14 l19.3 14 l19.3 -14 l19.3 14 l19.3 -14 l19.3 14 l19.3 -14 l19.3 14 l19.3 -14 l19.3 14 l19.3 -14 l19.3 14 V388 q0 22 -22 22 H192 q-22 0 -22 -22 Z" fill="#7CC39B"/></g>
+    <g transform="rotate(-5 240 270)">
+      <path d="M128 132 l19.7 -14 l19.7 14 l19.7 -14 l19.7 14 l19.7 -14 l19.7 14 l19.7 -14 l19.7 14 l19.7 -14 l19.7 14 l19.7 -14 l19.7 14 V396 q0 22 -22 22 H150 q-22 0 -22 -22 Z" fill="#FAFBF8"/>
+      <rect x="164" y="166" width="104" height="15" rx="7.5" fill="#CDD6D0"/>
+      <rect x="164" y="196" width="66" height="15" rx="7.5" fill="#CDD6D0"/>
+      <polyline class="mf-linea" pathLength="100" points="166,352 202,276 238,330 274,262 318,228" fill="none" stroke="#2D6A4F" stroke-width="27" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle class="mf-punto" cx="318" cy="228" r="21" fill="#E3B341"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,25 @@
+{
+  "name": "Mis Finanzas",
+  "short_name": "Mis Finanzas",
+  "description": "Gastos, ingresos, pagos y proyecciones de Allan",
+  "id": "./",
+  "start_url": "./?origen=app",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#E9EEEA",
+  "theme_color": "#E9EEEA",
+  "lang": "es-CL",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Bandeja", "url": "./?p=bandeja", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Panel", "url": "./?p=panel", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Agregar movimiento", "url": "./?p=agregar", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+  ]
+}
