@@ -114,7 +114,8 @@ if (esIOS && !esApp) { var no=false; try{no=localStorage.getItem('mf_inst_no')}c
 // --- Service worker y arranque ---
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').then(function(r){ REG = r; }).catch(function(){});
-  navigator.serviceWorker.addEventListener('message', function(e){ if (e.data && e.data.mf === 'ir') cargar(e.data.p || ''); });
+  // Al tocar un aviso con la app abierta: se cambia de sección sin recargar (si la app aún no está lista, se carga en esa sección)
+  navigator.serviceWorker.addEventListener('message', function(e){ if (!e.data || e.data.mf !== 'ir') return; if (FUENTE && $('splash').classList.contains('fuera')) aIframe({ mf:'ir', p: e.data.p || 'bandeja' }); else cargar(e.data.p || ''); });
 }
 if (!navigator.onLine) $('spMsg').textContent = 'Sin conexión a internet. Se cargará al reconectar.';
 window.addEventListener('online', function(){ $('spMsg').textContent=''; if(!$('splash').classList.contains('fuera')) cargar(pantalla); });
