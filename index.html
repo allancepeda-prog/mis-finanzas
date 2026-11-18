@@ -31,6 +31,7 @@ html,body{margin:0;height:100%;background:var(--fondo);overflow:hidden;font:15px
 @media (prefers-reduced-motion: reduce){.sp-ic .mf-linea,.sp-ic .mf-punto{animation:none}}
 .sp-w{font-size:22px;font-weight:700;letter-spacing:-.01em}
 .sp-msg{color:var(--suave);font-size:14px;min-height:20px;text-align:center;padding:0 24px}
+#zonaFace{position:fixed;z-index:15;display:none;border:0;padding:0;margin:0;background:transparent;border-radius:50%;-webkit-tap-highlight-color:rgba(0,0,0,.08);cursor:pointer}
 .hoja{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:20;width:min(440px,calc(100% - 24px));background:var(--tira);color:var(--tinta);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.3);padding:18px;display:none}
 .hoja.ver{display:block;animation:sube .25s ease}
 .hoja h3{margin:0 0 6px;font-size:17px}.hoja p{margin:0 0 14px;font-size:14px;color:var(--suave)}
@@ -49,6 +50,7 @@ html,body{margin:0;height:100%;background:var(--fondo);overflow:hidden;font:15px
 </div>
 
 <iframe id="app" title="Mis Finanzas" allow="clipboard-write"></iframe>
+<button type="button" id="zonaFace" aria-label="Entrar con Face ID" onclick="faceEntrar()"></button>
 
 <div class="hoja" id="hPush" role="dialog" aria-labelledby="hPushT">
   <h3 id="hPushT">Activar avisos</h3>
@@ -91,8 +93,10 @@ function deGoogle(o){ return /^https:\/\/([a-z0-9-]+\.)*(googleusercontent\.com|
 window.addEventListener('message', function(e){
   var d = e.data || {}; if (!d.mf || !deGoogle(e.origin)) return;
   if (d.mf === 'hola') { FUENTE = e.source; Promise.all([leerSid(), faceSoportado()]).then(function(r){ aIframe({ mf:'shell', push: pushSoportado(), permiso: pushSoportado() ? Notification.permission : 'no', sid: r[0], app: esApp, version: self.MF_VERSION, faceid: r[1], faceidActivo: !!faceCred() }); }); }
-  if (d.mf === 'pin') { FUENTE = e.source || FUENTE; if (faceCred()) faceHoja('entrar'); }
-  if (d.mf === 'pin-fuera') { cerrarHoja('hFace'); }
+  if (d.mf === 'pin') { FUENTE = e.source || FUENTE; if (faceCred()) aIframe({ mf:'faceid-disponible' }); }
+  if (d.mf === 'pin-fuera') { cerrarHoja('hFace'); $('zonaFace').style.display = 'none'; }
+  if (d.mf === 'faceid-zona') { var f = $('app').getBoundingClientRect(), z = $('zonaFace').style;
+    z.left = (f.left + d.x) + 'px'; z.top = (f.top + d.y) + 'px'; z.width = d.w + 'px'; z.height = d.h + 'px'; z.display = 'block'; }
   if (d.mf === 'faceid-activar') { FUENTE = e.source || FUENTE; FACE_T = d.t || ''; faceHoja('activar'); }
   if (d.mf === 'faceid-quitar') { FUENTE = e.source || FUENTE; faceQuitar(d.t || ''); }
   if (d.mf === 'listo') { FUENTE = e.source || FUENTE; listo(); }
@@ -156,7 +160,9 @@ function faceActivar(){
         .then(function(){ try{ localStorage.setItem('mf_faceid', cid); }catch(e){} cerrarHoja('hFace'); aIframe({ mf:'faceid-estado', activo:true }); });
     }).catch(faceError);
 }
+var FACE_OCUPADO = false;
 function faceEntrar(){
+  if (FACE_OCUPADO) return; FACE_OCUPADO = true; setTimeout(function(){ FACE_OCUPADO = false; }, 4000);
   var cid = faceCred();
   api('api=faceid-reto').then(function(r){
     return navigator.credentials.get({ publicKey: { challenge: b64u(r.reto), rpId: location.hostname,
@@ -164,7 +170,7 @@ function faceEntrar(){
   }).then(function(a){
     return api('api=faceid-entrar&id=' + cid + '&ad=' + bU(a.response.authenticatorData) + '&cd=' + bU(a.response.clientDataJSON) + '&sig=' + bU(a.response.signature));
   }).then(function(r){
-    cerrarHoja('hFace');
+    cerrarHoja('hFace'); $('zonaFace').style.display = 'none';
     var s = $('splash'); s.style.display = ''; s.classList.remove('fuera'); $('spMsg').textContent = 'Entrando…';
     $('app').src = EXEC + '?t=' + r.token + '&p=' + encodeURIComponent(pantalla || 'bandeja');
   }).catch(function(err){
