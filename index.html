@@ -163,13 +163,20 @@ function faceActivar(){
 var FACE_OCUPADO = false, FACE_RETO = null, FACE_RELOJ = null;
 /** Pide el reto antes del toque y lo renueva mientras el teclado del PIN esté a la vista (vence a los 2 minutos). */
 document.addEventListener('visibilitychange', function(){ if (!document.hidden && $('zonaFace').style.display !== 'none' && faceCred()) faceTraerReto(); });
+var FACE_AUTO_HECHO = false;
 function faceTraerReto(){
   clearTimeout(FACE_RELOJ);
   if (!faceCred()) return;
-  api('api=faceid-reto').then(function(r){ FACE_RETO = { v: r.reto, f: Date.now() }; }).catch(function(){ FACE_RETO = null; });
+  api('api=faceid-reto').then(function(r){
+    FACE_RETO = { v: r.reto, f: Date.now() };
+    // Al abrir la app, la hoja de Face ID sale sola: el iPhone permite una vez por apertura sin toque,
+    // y esa hoja (la de "Usar llave de acceso") Apple la muestra siempre en apps web; así queda un solo toque.
+    if (!FACE_AUTO_HECHO && performance.now() < 20000 && !document.hidden && $('zonaFace').style.display !== 'none') { FACE_AUTO_HECHO = true; faceEntrar(true); }
+  }).catch(function(){ FACE_RETO = null; });
   FACE_RELOJ = setTimeout(faceTraerReto, 90000);
 }
-function faceEntrar(){
+function faceEntrar(auto){
+  if (auto !== true) FACE_AUTO_HECHO = true;
   if (FACE_OCUPADO) return; FACE_OCUPADO = true; setTimeout(function(){ FACE_OCUPADO = false; }, 4000);
   var cid = faceCred();
   var pedir = function(reto){ return navigator.credentials.get({ publicKey: { challenge: b64u(reto), rpId: location.hostname,
@@ -186,6 +193,7 @@ function faceEntrar(){
     $('app').src = EXEC + '?t=' + r.token + '&p=' + encodeURIComponent(pantalla || 'bandeja');
   }).catch(function(err){
     if (/no está activado/i.test(String(err && err.message))) { try{ localStorage.removeItem('mf_faceid'); }catch(e){} }
+    if (auto === true) { FACE_OCUPADO = false; FACE_RETO = null; FACE_RELOJ = setTimeout(faceTraerReto, 500); return; } // cerró la hoja: queda el PIN y el icono
     faceError(err); faceTraerReto();
   });
 }
