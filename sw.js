@@ -31,7 +31,8 @@ self.addEventListener('push', function (e) {
     leerSid(),
     self.registration.pushManager.getSubscription().then(function (s) { return s ? huella(s.endpoint) : ''; }).catch(function () { return ''; })
   ]).then(function (r) {
-    var q = '?api=push&sid=' + encodeURIComponent(r[0] || '') + '&ep=' + encodeURIComponent(r[1] || '');
+    // "sid" no se puede usar como parámetro: Google responde 400 en la URL de la app (por eso llegaba el aviso genérico).
+    var q = '?api=push&tel=' + encodeURIComponent(r[0] || '') + '&ep=' + encodeURIComponent(r[1] || '');
     return fetch(self.MF_EXEC + q, { cache: 'no-store' }).then(function (x) { return x.json(); }).catch(function () { return []; });
   }).then(function (lista) {
     if (!lista || !lista.length) lista = [{ titulo: 'Mis Finanzas', cuerpo: 'Entró un movimiento nuevo. Ábrelo para verlo.' }];
