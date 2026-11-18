@@ -93,8 +93,8 @@ function deGoogle(o){ return /^https:\/\/([a-z0-9-]+\.)*(googleusercontent\.com|
 window.addEventListener('message', function(e){
   var d = e.data || {}; if (!d.mf || !deGoogle(e.origin)) return;
   if (d.mf === 'hola') { FUENTE = e.source; Promise.all([leerSid(), faceSoportado()]).then(function(r){ aIframe({ mf:'shell', push: pushSoportado(), permiso: pushSoportado() ? Notification.permission : 'no', sid: r[0], app: esApp, version: self.MF_VERSION, faceid: r[1], faceidActivo: !!faceCred() }); }); }
-  if (d.mf === 'pin') { FUENTE = e.source || FUENTE; if (faceCred()) aIframe({ mf:'faceid-disponible' }); }
-  if (d.mf === 'pin-fuera') { cerrarHoja('hFace'); $('zonaFace').style.display = 'none'; }
+  if (d.mf === 'pin') { FUENTE = e.source || FUENTE; if (faceCred()) { aIframe({ mf:'faceid-disponible' }); faceTraerReto(); } }
+  if (d.mf === 'pin-fuera') { cerrarHoja('hFace'); $('zonaFace').style.display = 'none'; clearTimeout(FACE_RELOJ); FACE_RETO = null; }
   if (d.mf === 'faceid-zona') { var f = $('app').getBoundingClientRect(), z = $('zonaFace').style;
     z.left = (f.left + d.x) + 'px'; z.top = (f.top + d.y) + 'px'; z.width = d.w + 'px'; z.height = d.h + 'px'; z.display = 'block'; }
   if (d.mf === 'faceid-activar') { FUENTE = e.source || FUENTE; FACE_T = d.t || ''; faceHoja('activar'); }
@@ -160,14 +160,25 @@ function faceActivar(){
         .then(function(){ try{ localStorage.setItem('mf_faceid', cid); }catch(e){} cerrarHoja('hFace'); aIframe({ mf:'faceid-estado', activo:true }); });
     }).catch(faceError);
 }
-var FACE_OCUPADO = false;
+var FACE_OCUPADO = false, FACE_RETO = null, FACE_RELOJ = null;
+/** Pide el reto antes del toque y lo renueva mientras el teclado del PIN esté a la vista (vence a los 2 minutos). */
+document.addEventListener('visibilitychange', function(){ if (!document.hidden && $('zonaFace').style.display !== 'none' && faceCred()) faceTraerReto(); });
+function faceTraerReto(){
+  clearTimeout(FACE_RELOJ);
+  if (!faceCred()) return;
+  api('api=faceid-reto').then(function(r){ FACE_RETO = { v: r.reto, f: Date.now() }; }).catch(function(){ FACE_RETO = null; });
+  FACE_RELOJ = setTimeout(faceTraerReto, 90000);
+}
 function faceEntrar(){
   if (FACE_OCUPADO) return; FACE_OCUPADO = true; setTimeout(function(){ FACE_OCUPADO = false; }, 4000);
   var cid = faceCred();
-  api('api=faceid-reto').then(function(r){
-    return navigator.credentials.get({ publicKey: { challenge: b64u(r.reto), rpId: location.hostname,
-      allowCredentials: [{ type:'public-key', id: b64u(cid) }], userVerification:'required', timeout: 60000 } });
-  }).then(function(a){
+  var pedir = function(reto){ return navigator.credentials.get({ publicKey: { challenge: b64u(reto), rpId: location.hostname,
+      allowCredentials: [{ type:'public-key', id: b64u(cid) }], userVerification:'required', timeout: 60000 } }); };
+  // El reto ya viene pedido: así Face ID se abre en el mismo toque. Si hay que ir a buscarlo primero, el iPhone
+  // pierde el toque y muestra la hoja "¿Iniciar sesión con tu llave de acceso?".
+  var listo = FACE_RETO && Date.now() - FACE_RETO.f < 100000 ? FACE_RETO.v : null;
+  FACE_RETO = null;
+  (listo ? pedir(listo) : api('api=faceid-reto').then(function(r){ return pedir(r.reto); })).then(function(a){
     return api('api=faceid-entrar&id=' + cid + '&ad=' + bU(a.response.authenticatorData) + '&cd=' + bU(a.response.clientDataJSON) + '&sig=' + bU(a.response.signature));
   }).then(function(r){
     cerrarHoja('hFace'); $('zonaFace').style.display = 'none';
@@ -175,7 +186,7 @@ function faceEntrar(){
     $('app').src = EXEC + '?t=' + r.token + '&p=' + encodeURIComponent(pantalla || 'bandeja');
   }).catch(function(err){
     if (/no está activado/i.test(String(err && err.message))) { try{ localStorage.removeItem('mf_faceid'); }catch(e){} }
-    faceError(err);
+    faceError(err); faceTraerReto();
   });
 }
 function faceQuitar(t){
