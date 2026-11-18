@@ -55,6 +55,11 @@ html,body{margin:0;height:100%;background:var(--fondo);overflow:hidden;font:15px
   <p>Te llegará un aviso a este teléfono cada vez que entre un gasto o un ingreso. Puedes desactivarlos cuando quieras en Ajustes.</p>
   <div class="acc"><button type="button" onclick="cerrarHoja('hPush');aIframe({mf:'push-error',error:'Activación cancelada.'})">Ahora no</button><button type="button" class="si" onclick="activarPush()">Permitir</button></div>
 </div>
+<div class="hoja" id="hFace" role="dialog" aria-labelledby="hFaceT">
+  <h3 id="hFaceT">Entrar con Face ID</h3>
+  <p id="hFaceTxt">Mira el teléfono para entrar sin escribir el PIN.</p>
+  <div class="acc"><button type="button" onclick="cerrarHoja('hFace')">Usar PIN</button><button type="button" class="si" id="btnFace" onclick="faceAccion()">Usar Face ID</button></div>
+</div>
 <div class="hoja" id="hInst" role="dialog" aria-labelledby="hInstT">
   <h3 id="hInstT">Instalar Mis Finanzas</h3>
   <p id="hInstTxt">Tendrás el icono en tu pantalla de inicio, pantalla completa y avisos.</p>
@@ -85,7 +90,11 @@ function leerSid(){ return idb().then(function(db){ return new Promise(function(
 function deGoogle(o){ return /^https:\/\/([a-z0-9-]+\.)*(googleusercontent\.com|google\.com)$/.test(o); }
 window.addEventListener('message', function(e){
   var d = e.data || {}; if (!d.mf || !deGoogle(e.origin)) return;
-  if (d.mf === 'hola') { FUENTE = e.source; leerSid().then(function(sid){ aIframe({ mf:'shell', push: pushSoportado(), permiso: pushSoportado() ? Notification.permission : 'no', sid: sid, app: esApp, version: self.MF_VERSION }); }); }
+  if (d.mf === 'hola') { FUENTE = e.source; Promise.all([leerSid(), faceSoportado()]).then(function(r){ aIframe({ mf:'shell', push: pushSoportado(), permiso: pushSoportado() ? Notification.permission : 'no', sid: r[0], app: esApp, version: self.MF_VERSION, faceid: r[1], faceidActivo: !!faceCred() }); }); }
+  if (d.mf === 'pin') { FUENTE = e.source || FUENTE; if (faceCred()) faceHoja('entrar'); }
+  if (d.mf === 'pin-fuera') { cerrarHoja('hFace'); }
+  if (d.mf === 'faceid-activar') { FUENTE = e.source || FUENTE; FACE_T = d.t || ''; faceHoja('activar'); }
+  if (d.mf === 'faceid-quitar') { FUENTE = e.source || FUENTE; faceQuitar(d.t || ''); }
   if (d.mf === 'listo') { FUENTE = e.source || FUENTE; listo(); }
   if (d.mf === 'push-activar') { FUENTE = e.source || FUENTE; VAPID = d.vapid;
     if (!pushSoportado()) return aIframe({mf:'push-error',error:'Este navegador no admite avisos.'});
@@ -104,6 +113,70 @@ function activarPush(){
     });
   }).then(function(sub){ aIframe({ mf:'push-sub', sub: sub.toJSON(), equipo: equipo() }); })
     .catch(function(err){ aIframe({ mf:'push-error', error: String(err.message || err) }); });
+}
+
+// --- Face ID (llave de acceso WebAuthn): la llave vive en el iPhone y solo se desbloquea con Face ID ---
+// La planilla guarda la clave pública y verifica cada entrada con un reto de un solo uso.
+var FACE_MODO = '', FACE_T = '';
+function faceCred(){ try{ return localStorage.getItem('mf_faceid') || ''; }catch(e){ return ''; } }
+function faceSoportado(){ try{ return window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable ? PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(function(){return false}) : Promise.resolve(false); }catch(e){ return Promise.resolve(false); } }
+function bU(buf){ var b=new Uint8Array(buf),s=''; for(var i=0;i<b.length;i++)s+=String.fromCharCode(b[i]); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function hex(b){ return Array.prototype.map.call(b,function(x){return ('0'+x.toString(16)).slice(-2)}).join(''); }
+function api(q){ return fetch(EXEC + '?' + q, { cache:'no-store' }).then(function(r){ return r.json(); }).then(function(j){ if (j.error) throw new Error(j.error); return j; }); }
+function faceHoja(modo){
+  FACE_MODO = modo;
+  $('hFaceT').textContent = modo === 'activar' ? 'Activar Face ID' : 'Entrar con Face ID';
+  $('hFaceTxt').textContent = modo === 'activar' ? 'Al tocar Activar, el iPhone te pedirá Face ID para crear la llave de acceso de Mis Finanzas en este teléfono.' : 'Mira el teléfono para entrar sin escribir el PIN.';
+  $('btnFace').textContent = modo === 'activar' ? 'Activar' : 'Usar Face ID';
+  $('hFace').querySelector('button').textContent = modo === 'activar' ? 'Ahora no' : 'Usar PIN';
+  $('btnFace').disabled = false;
+  $('hFace').classList.add('ver');
+}
+function faceAccion(){ $('btnFace').disabled = true; if (FACE_MODO === 'activar') faceActivar(); else faceEntrar(); }
+function faceError(err){
+  cerrarHoja('hFace');
+  var m = String((err && err.message) || err || '');
+  if (/NotAllowed|cancel|abort/i.test((err && err.name) || '') || /not allowed|cancel/i.test(m)) m = 'Face ID cancelado. Puedes entrar con tu PIN.';
+  aIframe({ mf:'faceid-error', error: m });
+}
+function faceActivar(){
+  var id = new Uint8Array(16); crypto.getRandomValues(id);
+  var reto = new Uint8Array(32); crypto.getRandomValues(reto);
+  navigator.credentials.create({ publicKey: {
+    rp: { id: location.hostname, name: 'Mis Finanzas' },
+    user: { id: id, name: 'Mis Finanzas', displayName: 'Mis Finanzas' },
+    challenge: reto, pubKeyCredParams: [{ type:'public-key', alg:-7 }],
+    authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required', residentKey:'discouraged' },
+    attestation: 'none', timeout: 60000 } }).then(function(c){
+      if (c.response.getPublicKeyAlgorithm && c.response.getPublicKeyAlgorithm() !== -7) throw new Error('Este teléfono no entregó una llave compatible.');
+      var spki = new Uint8Array(c.response.getPublicKey()), pk = spki.slice(spki.length - 65);
+      if (pk[0] !== 4) throw new Error('Este teléfono no entregó una llave compatible.');
+      var cid = bU(c.rawId);
+      return api('api=faceid-registrar&t=' + encodeURIComponent(FACE_T) + '&id=' + cid + '&x=' + hex(pk.slice(1,33)) + '&y=' + hex(pk.slice(33)) + '&equipo=' + encodeURIComponent(equipo()))
+        .then(function(){ try{ localStorage.setItem('mf_faceid', cid); }catch(e){} cerrarHoja('hFace'); aIframe({ mf:'faceid-estado', activo:true }); });
+    }).catch(faceError);
+}
+function faceEntrar(){
+  var cid = faceCred();
+  api('api=faceid-reto').then(function(r){
+    return navigator.credentials.get({ publicKey: { challenge: b64u(r.reto), rpId: location.hostname,
+      allowCredentials: [{ type:'public-key', id: b64u(cid) }], userVerification:'required', timeout: 60000 } });
+  }).then(function(a){
+    return api('api=faceid-entrar&id=' + cid + '&ad=' + bU(a.response.authenticatorData) + '&cd=' + bU(a.response.clientDataJSON) + '&sig=' + bU(a.response.signature));
+  }).then(function(r){
+    cerrarHoja('hFace');
+    var s = $('splash'); s.style.display = ''; s.classList.remove('fuera'); $('spMsg').textContent = 'Entrando…';
+    $('app').src = EXEC + '?t=' + r.token + '&p=' + encodeURIComponent(pantalla || 'bandeja');
+  }).catch(function(err){
+    if (/no está activado/i.test(String(err && err.message))) { try{ localStorage.removeItem('mf_faceid'); }catch(e){} }
+    faceError(err);
+  });
+}
+function faceQuitar(t){
+  var cid = faceCred();
+  (cid ? api('api=faceid-quitar&t=' + encodeURIComponent(t) + '&id=' + cid) : Promise.resolve()).then(function(){
+    try{ localStorage.removeItem('mf_faceid'); }catch(e){} aIframe({ mf:'faceid-estado', activo:false });
+  }).catch(faceError);
 }
 
 // --- Instalación ---
