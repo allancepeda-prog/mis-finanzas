@@ -36,9 +36,15 @@ self.addEventListener('push', function (e) {
     return fetch(self.MF_EXEC + q, { cache: 'no-store' }).then(function (x) { return x.json(); }).catch(function () { return []; });
   }).then(function (lista) {
     if (!lista || !lista.length) lista = [{ titulo: 'Mis Finanzas', cuerpo: 'Entró un movimiento nuevo. Ábrelo para verlo.' }];
+    // Un reintento puede traer otra vez el mismo aviso (misma marca): se quita el que ya está y se muestra uno solo.
+    // El iPhone no reemplaza solo los avisos con la misma marca, por eso salían duplicados.
     return Promise.all(lista.map(function (m) {
-      return self.registration.showNotification(m.titulo || 'Mis Finanzas', {
-        body: m.cuerpo || '', tag: m.tag || 'mf', icon: 'icon-192.png', badge: 'favicon-32.png', lang: 'es-CL', data: { p: m.p || 'bandeja' }
+      var tag = m.tag || 'mf';
+      return self.registration.getNotifications({ tag: tag }).catch(function () { return []; }).then(function (ya) {
+        ya.forEach(function (n) { n.close(); });
+        return self.registration.showNotification(m.titulo || 'Mis Finanzas', {
+          body: m.cuerpo || '', tag: tag, icon: 'icon-192.png', badge: 'favicon-32.png', lang: 'es-CL', data: { p: m.p || 'bandeja' }
+        });
       });
     }));
   }));
